@@ -1,0 +1,369 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.level2.scala</groupId>
+	<artifactId>searchbird-server</artifactId>
+	<name>Level 2 CRM :: Searchbird</name>
+	<version>1.0.0-SNAPSHOT</version>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<junit.version>4.8.2</junit.version>
+		<slf4j-log4j12.version>1.5.10</slf4j-log4j12.version>
+		<slf4j-api.version>1.5.10</slf4j-api.version>
+		<commons-lang3.version>3.1</commons-lang3.version>
+		<gson.version>2.2.4</gson.version>
+		<quartz.version>2.2.0</quartz.version>
+		<scala.version>2.11.8</scala.version>
+		<scala.compat.version>2.11</scala.compat.version>
+		<finagle.version>6.27.0</finagle.version>
+	</properties>
+	<build>
+		<finalName>${project.artifactId}-${project.version}</finalName>
+		<directory>target</directory>
+		<outputDirectory>target/classes</outputDirectory>
+		<sourceDirectory>src/main/java</sourceDirectory>
+		<testSourceDirectory>src/test/java</testSourceDirectory>
+		<testOutputDirectory>target/test-classes</testOutputDirectory>
+
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<targetPath>target/classes</targetPath>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+		<filters>
+		</filters>
+
+		<plugins>
+			<plugin>
+				<groupId>com.twitter</groupId>
+				<artifactId>scrooge-maven-plugin</artifactId>
+				<version>3.18.1</version>
+				<configuration>
+					<thriftNamespaceMappings>
+						<!-- <thriftNamespaceMapping> -->
+						<!-- <from>com.level2.scala.service</from> -->
+						<!-- <to>com.level2.scala.generated.service</to> -->
+						<!-- </thriftNamespaceMapping> -->
+					</thriftNamespaceMappings>
+					<!-- <language>scala-experimental</language> default is scala -->
+					<thriftOpts>
+						<!-- add other Scrooge command line options using thriftOpts -->
+						<thriftOpt>--finagle</thriftOpt>
+					</thriftOpts>
+					<!-- tell scrooge to not to build the extracted thrift files (defaults 
+						to true) -->
+					<!-- <buildExtractedThrift>false</buildExtractedThrift> -->
+					<outputDirectory>src/main/scala-generated</outputDirectory>
+
+					<checkStaleness>false</checkStaleness>
+					<!-- <outputDirectory>src/main/scala</outputDirectory> -->
+
+				</configuration>
+				<executions>
+					<execution>
+						<id>thrift-sources</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>compile</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>thrift-test-sources</id>
+						<phase>generate-test-sources</phase>
+						<goals>
+							<goal>testCompile</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>1.7</version>
+				<executions>
+					<execution>
+						<id>add-source</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>src/main/scala-generated/scrooge</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- <plugin> -->
+			<!-- <artifactId>maven-antrun-plugin</artifactId> -->
+			<!-- <executions> -->
+			<!-- <execution> -->
+			<!-- <phase>generate-sources</phase> -->
+			<!-- <goals> -->
+			<!-- <goal>run</goal> -->
+			<!-- </goals> -->
+			<!-- <configuration> -->
+			<!-- <tasks> -->
+			<!-- <echo>Copying result of scrooge to code ...</echo> -->
+			<!-- <copy overwrite="true" todir="src/main/scala"> -->
+			<!-- <fileset dir="${basedir}/src/main/scala-generated/scrooge" -->
+			<!-- includes="**/*" /> -->
+			<!-- </copy> -->
+			<!-- </tasks> -->
+			<!-- </configuration> -->
+			<!-- </execution> -->
+			<!-- </executions> -->
+			<!-- </plugin> -->
+
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>compile</phase>
+						<goals>
+							<goal>compile</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>net.alchim31.maven</groupId>
+				<artifactId>scala-maven-plugin</artifactId>
+				<version>3.2.2</version>
+				<executions>
+					<execution>
+						<id>scala-compile-first</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>add-source</goal>
+							<goal>compile</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>scala-test-compile</id>
+						<phase>process-test-resources</phase>
+						<goals>
+							<goal>testCompile</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<scalaVersion>${scala.version}</scalaVersion>
+					<!-- <excludes> -->
+					<!-- <exclude>**/../**/scrooge/**/*.scala</exclude> -->
+					<!-- </excludes> -->
+					<!-- <jvmArgs> -->
+					<!-- <jvmArg>-Xms64m</jvmArg> -->
+					<!-- <jvmArg>-Xmx1024m</jvmArg> -->
+					<!-- </jvmArgs> -->
+					<arg>-make:transitive</arg>
+					<arg>-dependencyfile</arg>
+					<arg>${project.build.directory}/.scala_dependencies</arg>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.18.1</version>
+				<configuration>
+					<useFile>false</useFile>
+					<disableXmlReport>true</disableXmlReport>
+					<!-- If you have classpath issue like NoDefClassError,... -->
+					<!-- useManifestOnlyJar>false</useManifestOnlyJar -->
+					<includes>
+						<include>**/*Test.*</include>
+						<include>**/*Suite.*</include>
+					</includes>
+				</configuration>
+			</plugin>
+			<!-- <plugin> -->
+			<!-- <groupId>org.scala-tools</groupId> -->
+			<!-- <artifactId>maven-scala-plugin</artifactId> -->
+			<!-- <version>2.15.2</version> -->
+			<!-- </plugin> -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+
+		<pluginManagement>
+		<plugins>
+			<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+			<plugin>
+				<groupId>org.eclipse.m2e</groupId>
+				<artifactId>lifecycle-mapping</artifactId>
+				<version>1.0.0</version>
+				<configuration>
+					<lifecycleMappingMetadata>
+						<pluginExecutions>
+							<pluginExecution>
+								<pluginExecutionFilter>
+									<groupId>com.twitter</groupId>
+									<artifactId>
+										scrooge-maven-plugin
+									</artifactId>
+									<versionRange>
+										[3.18.1,)
+									</versionRange>
+									<goals>
+										<goal>compile</goal>
+										<goal>testCompile</goal>
+									</goals>
+								</pluginExecutionFilter>
+								<action>
+									<ignore></ignore>
+								</action>
+							</pluginExecution>
+						</pluginExecutions>
+					</lifecycleMappingMetadata>
+				</configuration>
+			</plugin>
+		</plugins>
+		</pluginManagement>
+	</build>
+
+
+	<dependencies>
+		<dependency>
+			<groupId>org.scala-lang</groupId>
+			<artifactId>scala-library</artifactId>
+			<version>${scala.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.scala-lang</groupId>
+			<artifactId>scala-compiler</artifactId>
+			<version>${scala.version}</version>
+		</dependency>
+
+		<!-- Test -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.11</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- <dependency> -->
+		<!-- <groupId>org.specs2</groupId> -->
+		<!-- <artifactId>specs2-core_${scala.compat.version}</artifactId> -->
+		<!-- <version>2.4.16</version> -->
+		<!-- <scope>test</scope> -->
+		<!-- </dependency> -->
+		<!-- <dependency> -->
+		<!-- <groupId>org.scalatest</groupId> -->
+		<!-- <artifactId>scalatest_${scala.compat.version}</artifactId> -->
+		<!-- <version>2.2.4</version> -->
+		<!-- <scope>test</scope> -->
+		<!-- </dependency> -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${slf4j-log4j12.version}</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>${slf4j-log4j12.version}</version>
+			<scope>compile</scope>
+		</dependency>
+		<!-- <dependency> -->
+		<!-- <groupId>org.apache.commons</groupId> -->
+		<!-- <artifactId>commons-lang3</artifactId> -->
+		<!-- <version>${commons-lang3.version}</version> -->
+		<!-- </dependency> -->
+		<dependency>
+			<groupId>com.twitter</groupId>
+			<artifactId>finagle-thrift_${scala.compat.version}</artifactId>
+			<version>${finagle.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.twitter</groupId>
+			<artifactId>finagle-core_${scala.compat.version}</artifactId>
+			<version>${finagle.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.twitter</groupId>
+			<artifactId>finagle-stats_${scala.compat.version}</artifactId>
+			<version>${finagle.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.twitter</groupId>
+			<artifactId>finagle-zipkin_${scala.compat.version}</artifactId>
+			<version>${finagle.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.twitter</groupId>
+			<artifactId>scrooge-core_${scala.compat.version}</artifactId>
+			<version>3.20.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.twitter</groupId>
+			<artifactId>twitter-server_${scala.compat.version}</artifactId>
+			<version>1.12.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.thrift</groupId>
+			<artifactId>libthrift</artifactId>
+			<version>0.9.3</version>
+		</dependency>
+
+	</dependencies>
+	<repositories>
+		<repository>
+			<id>scala-tools.org</id>
+			<name>Scala-tools Maven2 Repository</name>
+			<url>http://scala-tools.org/repo-releases</url>
+		</repository>
+		<repository>
+			<id>twitter-maven-repo</id>
+			<name>Twitter maven repo</name>
+			<url>https://maven.twttr.com/</url>
+		</repository>
+	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>scala-tools.org</id>
+			<name>Scala-tools Maven2 Repository</name>
+			<url>http://scala-tools.org/repo-releases</url>
+		</pluginRepository>
+	</pluginRepositories>
+	<distributionManagement>
+		<repository>
+			<id>level2-nexus</id>
+			<url>http://www.level2crm.com/nexus/content/repositories/releases</url>
+			<uniqueVersion>false</uniqueVersion>
+		</repository>
+		<snapshotRepository>
+			<id>level2-nexus-snapshots</id>
+			<url>http://www.level2crm.com/nexus/content/repositories/snapshots</url>
+			<uniqueVersion>false</uniqueVersion>
+		</snapshotRepository>
+	</distributionManagement>
+	<packaging>jar</packaging>
+</project>
