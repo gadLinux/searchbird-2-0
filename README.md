@@ -1,4 +1,11 @@
 # Searchbird 2.0
+
+This is a fork from https://github.com/feynmanliang/searchbird-2.0 
+All credits to it's author. 
+
+I just added proper maven and eclipse support, from both scrooge and scala.
+
+
 A distributed inverted-index implementation for querying documents by
 terms. Inspired by Searchbird from Twitter's [Scala
 School](https://twitter.github.io/scala_school/searchbird.html) with the
